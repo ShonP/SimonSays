@@ -3,13 +3,21 @@ import {StatusBar} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {Provider} from 'react-redux';
 import {PersistGate} from 'redux-persist/integration/react';
-import Score from './src/pages/score/ResultScreen';
-import {ThemeProvider} from 'styled-components';
-import store from './src/shared/store';
 import {persistStore} from 'redux-persist';
-import theme from './src/shared/theme';
+import {createStackNavigator} from '@react-navigation/stack';
+import {ThemeProvider} from 'styled-components';
+import {RootStackParamList} from './src/shared/types';
+import ResultScreen from './src/screens/resultScreen/ResultScreen';
+import store from './src/shared/store';
+import theme from './src/shared/theme/theme';
+import Game from './src/screens/Game/Game';
 
 const persistor = persistStore(store);
+
+persistor.purge();
+
+const Stack = createStackNavigator<RootStackParamList>();
+
 const App = () => {
   return (
     <ThemeProvider theme={theme}>
@@ -17,7 +25,10 @@ const App = () => {
         <PersistGate loading={null} persistor={persistor}>
           <NavigationContainer>
             <StatusBar barStyle="dark-content" />
-            <Score />
+            <Stack.Navigator>
+              <Stack.Screen name="Result" component={ResultScreen} />
+              <Stack.Screen name="Game" component={Game} />
+            </Stack.Navigator>
           </NavigationContainer>
         </PersistGate>
       </Provider>

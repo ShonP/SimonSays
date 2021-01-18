@@ -1,3 +1,3 @@
 import {RootState} from './index';
 
-export const devicesSelector = (state: RootState) => state.devices;
+export const scoresSelector = (state: RootState) => state.scores;

@@ -1,7 +1,7 @@
 import {combineReducers} from '@reduxjs/toolkit';
-import devices from './slices/devices';
+import sequence from './slices/sequence';
 import scores from './slices/scores';
 
-const reducers = combineReducers({devices, scores});
+const reducers = combineReducers({sequence, scores});
 
 export default reducers;

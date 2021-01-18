@@ -11,6 +11,7 @@ import styled, {useTheme} from 'styled-components/native';
 const StyledTextInput = styled.TextInput`
   height: 40px;
   padding-left: 6px;
+  min-width: 150px;
 `;
 
 const TextInput: FC<TextInputProps> = ({onBlur, onFocus, ...rest}) => {
