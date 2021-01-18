@@ -1,7 +1,15 @@
-import React from 'react';
-import {Dimensions} from 'react-native';
+import {RouteProp} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import React, {FC, useCallback, useEffect, useState} from 'react';
+import playSound from '../../shared/util/playSound';
+import {Dimensions, Button} from 'react-native';
+import {useDispatch, useSelector} from 'react-redux';
 import styled from 'styled-components/native';
+import {sequenceActions} from '../../shared/store/slices/sequence';
+import {sequenceSelector} from '../../shared/store/selectors';
+import {RootStackParamList} from '../../shared/types';
 import Pad from './Pad';
+import {isEqual} from 'lodash';
 
 const Root = styled.View`
   justify-content: center;
@@ -21,16 +29,70 @@ const Wrapper = styled.View`
 `;
 
 const pads = [0, 1, 2, 3];
-const Text = styled.Text``;
 
-const Game = () => (
-  <Root>
-    <Wrapper>
-      {pads.map((padIdx) => (
-        <Pad key={padIdx} padIdx={padIdx} />
-      ))}
-    </Wrapper>
-  </Root>
-);
+type IProps = {
+  navigation: StackNavigationProp<RootStackParamList, 'Game'>;
+  route: RouteProp<RootStackParamList, 'Game'>;
+};
+
+const Game: FC<IProps> = ({
+  route: {
+    params: {userName},
+  },
+  navigation: {navigate},
+}) => {
+  const [currentHighlight, setCurrentHighlight] = useState<number | null>(null);
+  const [savedSequence, setSavedSequence] = useState<Array<Number>>([]);
+  const sequence = useSelector(sequenceSelector);
+  const dispatch = useDispatch();
+  const onGameStart = () => {
+    dispatch(sequenceActions.addSequence());
+  };
+  console.log({sequence, savedSequence});
+
+  useEffect(() => {
+    sequence.forEach((_, idx) => {
+      setTimeout(() => {
+        setCurrentHighlight(idx);
+      }, 1500 * idx);
+    });
+    setSavedSequence([]);
+  }, [sequence]);
+
+  const onPadPress = useCallback((padIdx) => {
+    playSound(padIdx);
+    setSavedSequence((prevState) => [...prevState, padIdx]);
+  }, []);
+
+  useEffect(() => {
+    if (sequence.length && savedSequence.length === sequence.length) {
+      if (isEqual(savedSequence, sequence)) {
+        dispatch(sequenceActions.addSequence());
+      } else {
+        navigate('Result');
+      }
+    }
+  }, [dispatch, navigate, savedSequence, sequence]);
+
+  return (
+    <Root>
+      <Button
+        disabled={!!sequence.length}
+        title={`Start game as ${userName}`}
+        onPress={onGameStart}
+      />
+      <Wrapper>
+        {pads.map((padIdx) => (
+          <Pad
+            key={padIdx}
+            padIdx={padIdx}
+            onPadPress={onPadPress}
+            isHighlight={currentHighlight === padIdx}
+          />
+        ))}
+      </Wrapper>
+    </Root>
+  );
+};
 
 export default Game;
