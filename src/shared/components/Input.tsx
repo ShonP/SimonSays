@@ -16,8 +16,8 @@ const StyledTextInput = styled.TextInput`
 const TextInput: FC<TextInputProps> = ({onBlur, onFocus, ...rest}) => {
   const [isFocused, setIsFocused] = useState(false);
   const {
-    colors: {blue, lightGray},
-  }: any = useTheme();
+    palette: {blue, lightGray},
+  } = useTheme();
 
   const handleFocus = useCallback(
     (e: NativeSyntheticEvent<TextInputFocusEventData>) => {
