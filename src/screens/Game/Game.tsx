@@ -6,6 +6,7 @@ import {Dimensions, Button} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import styled from 'styled-components/native';
 import {sequenceActions} from '../../shared/store/slices/sequence';
+import {scoresActions} from '../../shared/store/slices/scores';
 import {sequenceSelector} from '../../shared/store/selectors';
 import {RootStackParamList} from '../../shared/types';
 import Pad from './Pad';
@@ -51,12 +52,13 @@ const Game: FC<IProps> = ({
   console.log({sequence, savedSequence});
 
   useEffect(() => {
-    sequence.forEach((_, idx) => {
-      setTimeout(() => {
-        setCurrentHighlight(idx);
-      }, 1500 * idx);
-    });
     setSavedSequence([]);
+  }, [sequence]);
+
+  useEffect(() => {
+    if (sequence.length) {
+      setCurrentHighlight(sequence[0]);
+    }
   }, [sequence]);
 
   const onPadPress = useCallback((padIdx) => {
@@ -67,12 +69,17 @@ const Game: FC<IProps> = ({
   useEffect(() => {
     if (sequence.length && savedSequence.length === sequence.length) {
       if (isEqual(savedSequence, sequence)) {
-        dispatch(sequenceActions.addSequence());
+        setTimeout(() => {
+          dispatch(sequenceActions.addSequence());
+        }, 750);
       } else {
+        dispatch(
+          scoresActions.addScore({userName, score: savedSequence.length}),
+        );
         navigate('Result');
       }
     }
-  }, [dispatch, navigate, savedSequence, sequence]);
+  }, [dispatch, navigate, savedSequence, sequence, userName]);
 
   return (
     <Root>
@@ -85,9 +92,11 @@ const Game: FC<IProps> = ({
         {pads.map((padIdx) => (
           <Pad
             key={padIdx}
+            disabled={sequence.length === 0}
             padIdx={padIdx}
             onPadPress={onPadPress}
             isHighlight={currentHighlight === padIdx}
+            setCurrentHighlight={setCurrentHighlight}
           />
         ))}
       </Wrapper>

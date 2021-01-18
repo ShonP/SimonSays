@@ -11,11 +11,7 @@ interface IProps {
   isHighlight: boolean;
   disabled: boolean;
   onPadPress: (padIdx: number) => void;
-}
-
-interface IPad {
-  color: string;
-  isHighlight: boolean;
+  setCurrentHighlight: React.Dispatch<React.SetStateAction<number | null>>;
 }
 
 const TouchableOpacity = styled.TouchableOpacity`
@@ -24,7 +20,13 @@ const TouchableOpacity = styled.TouchableOpacity`
   flex-wrap: wrap;
 `;
 
-const Pad: FC<IProps> = ({padIdx, onPadPress, disabled, isHighlight}) => {
+const Pad: FC<IProps> = ({
+  padIdx,
+  onPadPress,
+  disabled,
+  isHighlight,
+  setCurrentHighlight,
+}) => {
   const theme = useTheme();
   const color = get(theme.palette, get(padColors, padIdx));
   const Animation = new Animated.Value(1);
@@ -34,6 +36,7 @@ const Pad: FC<IProps> = ({padIdx, onPadPress, disabled, isHighlight}) => {
 
   useEffect(() => {
     if (isHighlight) {
+      console.log({isHighlight, padIdx});
       Animation.setValue(1);
       playSound(padIdx);
       Animated.timing(Animation, {
@@ -47,10 +50,12 @@ const Pad: FC<IProps> = ({padIdx, onPadPress, disabled, isHighlight}) => {
           duration: 750,
           easing: Easing.ease,
           useNativeDriver: true,
-        }).start();
+        }).start(() => {
+          setCurrentHighlight(null);
+        });
       });
     }
-  }, [Animation, isHighlight, padIdx]);
+  }, [Animation, isHighlight, padIdx, setCurrentHighlight]);
 
   const opacity = Animation.interpolate({
     inputRange: [0.5, 1],

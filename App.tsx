@@ -14,8 +14,6 @@ import Game from './src/screens/Game/Game';
 
 const persistor = persistStore(store);
 
-persistor.purge();
-
 const Stack = createStackNavigator<RootStackParamList>();
 
 const App = () => {
