@@ -1,8 +1,4 @@
-import {
-  combineReducers,
-  configureStore,
-  getDefaultMiddleware,
-} from '@reduxjs/toolkit';
+import {configureStore, getDefaultMiddleware} from '@reduxjs/toolkit';
 import {
   persistReducer,
   FLUSH,
@@ -12,18 +8,18 @@ import {
   PURGE,
   REGISTER,
 } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
+import AsyncStorage from '@react-native-community/async-storage';
 import reducers from './reducers';
 
 const persistConfig = {
   key: 'root',
   version: 1,
-  storage,
+  storage: AsyncStorage,
 };
 
 const persistedReducer = persistReducer(persistConfig, reducers);
 
-export const store = configureStore({
+const store = configureStore({
   reducer: persistedReducer,
   middleware: getDefaultMiddleware({
     serializableCheck: {
@@ -31,5 +27,7 @@ export const store = configureStore({
     },
   }),
 });
+
+export default store;
 
 export type RootState = ReturnType<typeof store.getState>;
