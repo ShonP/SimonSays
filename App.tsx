@@ -10,7 +10,7 @@ import {RootStackParamList} from './src/shared/types';
 import ResultScreen from './src/screens/resultScreen/ResultScreen';
 import store from './src/shared/store';
 import theme from './src/shared/theme/theme';
-import Game from './src/screens/Game/Game';
+import Game from './src/screens/game/Game';
 
 const persistor = persistStore(store);
 

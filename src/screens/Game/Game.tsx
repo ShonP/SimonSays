@@ -2,7 +2,7 @@ import {RouteProp} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import React, {FC, useCallback, useEffect, useState} from 'react';
 import playSound from '../../shared/util/playSound';
-import {Dimensions, Button} from 'react-native';
+import {Dimensions, Button, Modal, Text} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import styled from 'styled-components/native';
 import {sequenceActions} from '../../shared/store/slices/sequence';
@@ -42,14 +42,31 @@ const Game: FC<IProps> = ({
   },
   navigation: {navigate},
 }) => {
-  const [currentHighlight, setCurrentHighlight] = useState<number | null>(null);
+  const [currentSequenceIdx, setCurrentSequenceIdx] = useState<number | null>(
+    null,
+  );
+  const [isModal, setIsModal] = useState(false);
   const [savedSequence, setSavedSequence] = useState<Array<Number>>([]);
+  const [isSequenceing, setIsSequencing] = useState(false);
   const sequence = useSelector(sequenceSelector);
   const dispatch = useDispatch();
-  const onGameStart = () => {
+
+  const addSequence = useCallback(() => {
     dispatch(sequenceActions.addSequence());
-  };
-  console.log({sequence, savedSequence});
+  }, [dispatch]);
+
+  const onGameFinished = useCallback(
+    (isWinner: boolean = false) => {
+      setIsModal(true);
+      dispatch(
+        scoresActions.addScore({
+          userName,
+          score: isWinner ? sequence.length : sequence.length - 1,
+        }),
+      );
+    },
+    [dispatch, sequence.length, userName],
+  );
 
   useEffect(() => {
     setSavedSequence([]);
@@ -57,9 +74,22 @@ const Game: FC<IProps> = ({
 
   useEffect(() => {
     if (sequence.length) {
-      setCurrentHighlight(sequence[0]);
+      setCurrentSequenceIdx(0);
+      setIsSequencing(true);
     }
   }, [sequence]);
+
+  const onAnimationEnd = useCallback(() => {
+    if (currentSequenceIdx !== null) {
+      if (currentSequenceIdx < sequence.length - 1) {
+        setCurrentSequenceIdx(null);
+        setCurrentSequenceIdx(currentSequenceIdx + 1);
+      } else if (currentSequenceIdx === sequence.length - 1) {
+        setCurrentSequenceIdx(null);
+        setIsSequencing(false);
+      }
+    }
+  }, [currentSequenceIdx, sequence.length]);
 
   const onPadPress = useCallback((padIdx) => {
     playSound(padIdx);
@@ -67,36 +97,72 @@ const Game: FC<IProps> = ({
   }, []);
 
   useEffect(() => {
-    if (sequence.length && savedSequence.length === sequence.length) {
-      if (isEqual(savedSequence, sequence)) {
-        setTimeout(() => {
-          dispatch(sequenceActions.addSequence());
-        }, 750);
-      } else {
-        dispatch(
-          scoresActions.addScore({userName, score: savedSequence.length}),
+    if (sequence.length) {
+      if (savedSequence.length < 10) {
+        const sequenceThatAreNotSame = savedSequence.filter(
+          (seq, idx) => seq !== sequence[idx],
         );
-        navigate('Result');
+        if (sequenceThatAreNotSame.length > 0) {
+          onGameFinished();
+        } else if (sequence.length === savedSequence.length) {
+          setTimeout(() => {
+            addSequence();
+          }, 750);
+        }
+      } else if (savedSequence.length === sequence.length) {
+        if (isEqual(savedSequence, sequence)) {
+          onGameFinished(true);
+        } else {
+          onGameFinished();
+        }
       }
     }
-  }, [dispatch, navigate, savedSequence, sequence, userName]);
+  }, [
+    addSequence,
+    dispatch,
+    navigate,
+    onGameFinished,
+    savedSequence,
+    sequence,
+    userName,
+  ]);
+
+  const onCloseModal = useCallback(() => {
+    navigate('Result');
+  }, [navigate]);
 
   return (
     <Root>
       <Button
         disabled={!!sequence.length}
         title={`Start game as ${userName}`}
-        onPress={onGameStart}
+        onPress={addSequence}
       />
+      <Modal
+        animationType="slide"
+        visible={isModal}
+        onRequestClose={onCloseModal}>
+        <Root>
+          <Text>{`Congratulation ${userName} you scored ${
+            sequence.length - 1
+          }!`}</Text>
+
+          <Button title="Close modal" onPress={onCloseModal} />
+        </Root>
+      </Modal>
       <Wrapper>
         {pads.map((padIdx) => (
           <Pad
             key={padIdx}
-            disabled={sequence.length === 0}
+            disabled={sequence.length === 0 || isSequenceing}
             padIdx={padIdx}
             onPadPress={onPadPress}
-            isHighlight={currentHighlight === padIdx}
-            setCurrentHighlight={setCurrentHighlight}
+            isHighlight={
+              currentSequenceIdx === null
+                ? false
+                : sequence[currentSequenceIdx] === padIdx
+            }
+            onAnimationEnd={onAnimationEnd}
           />
         ))}
       </Wrapper>

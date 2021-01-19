@@ -8,8 +8,8 @@ export const scores = createSlice({
   initialState,
   reducers: {
     addScore: (state, {payload}) =>
-      [...state, payload]
-        .sort((a, b) => a.score - b.socre)
+      [payload, ...state]
+        .sort((a, b) => b.score - a.score)
         .filter(
           (score, index, self) =>
             index === self.findIndex((t) => t.userName === score.userName),

@@ -7,7 +7,7 @@ export const sequence = createSlice({
   initialState,
   reducers: {
     resetSequence: () => [],
-    addSequence: (state) => [...state, Math.floor(Math.random() * 3)],
+    addSequence: (state) => [...state, Math.floor(Math.random() * 4)],
   },
 });
 
